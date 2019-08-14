@@ -1,54 +1,69 @@
 // eslint-disable-next-line no-unused-vars
+const {exec} = require('../db/mysql')
 const getList = (author,keyword) => {
-  // 先返回假数据（格式是正确的）
-  return[
-      {
-          id:1,
-          title:'标题A',
-          content:'内容A',
-          createTime:1563280383697,
-          author:'zhangsan'
-      },
-      {
-          id:2,
-          title:'标题B',
-          content:'内容B',
-          createTime:1563280435273,
-          author:'lisi'
-      }
-  ]
+    let sql = `select * from blogs where 1=1 ` 
+    if(author) {
+        sql += `and author = '${author}' `
+    }
+    if(keyword) {
+        sql += `and title like '%${keyword}%' `
+    }
+    sql += `order by createtime desc;`
+    //返回promise
+    return exec(sql)
 }
 // eslint-disable-next-line no-unused-vars
 const getDetail = (id)=>{
-    //返回假数据
-    return {
-        id:1,
-        title:'标题A',
-        content:'内容A',
-        createTime:1563280383697,
-        author:'zhangsan'
-    }
+    const sql = `select * from blogs where id='${id}'`
+    return exec(sql).then(rows=>{
+        return rows[0]
+    })
 }
 
 // eslint-disable-next-line no-unused-vars
 const newBlog = (blogData = {}) => {
-    //blogData是一个博客对象，包含title content属性
-    return {
-        id:3 //表示新建博客，插入到数据表里面的id
-    }
+    const title = blogData.title
+    const content = blogData.content
+    const author = blogData.author
+    const createtime = Date.now()
+
+    const sql = `insert into blogs (title,content,createtime,author) values('${title}','${content}',${createtime},'${author}')`
+
+    return exec(sql).then(insertData=>{
+        console.log('insertData is',insertData)
+        return {
+            id:insertData.insertId
+        }
+    })
 }
 
 // eslint-disable-next-line no-unused-vars
 const updateBlog = (id,blogData = {}) => {
-    return true
+    const title = blogData.title
+    const content = blogData.content
+
+    const sql = `update blogs set title='${title}',content='${content}' where id=${id}`
+    return exec(sql).then((updateData)=>{
+        console.log('updateData is ',updateData)
+        // if(updateBlog.affectedRows > 0){
+        //     return true
+        // } 
+        // return false
+        return updateData.affectedRows>0?true:false
+    })
 }
 
 //删除博客
 
-// eslint-disable-next-line no-unused-vars
-const delBlog = (id) =>{
-    // id就是要删除博客的id
-    return true
+const delBlog = (id,author) =>{
+    const sql = `delet from blogs where id=${id} and author='${author}'`
+
+    return exec(sql).then((delData)=>{
+        if(delData.affectedRows>0){
+            return true
+        }
+        return false
+    })
 }
 module.exports = {
     getList,
