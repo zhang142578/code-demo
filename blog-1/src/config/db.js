@@ -3,7 +3,7 @@ const env =process.env.NODE_ENV //环境参数
 let MYSQL_CONF
 if(env === 'dev') {
     MYSQL_CONF = {
-        host:'localhost',
+        host:'47.100.8.252',
         user:'root',
         password:'zhty2252',
         port:'3306',
@@ -13,7 +13,7 @@ if(env === 'dev') {
 
 if(env === 'production'){
     MYSQL_CONF = {
-        host:'localhost',
+        host:'47.100.8.252',
         user:'root',
         password:'zhty2252',
         port:'3306',
