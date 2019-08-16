@@ -1,8 +1,8 @@
-const handleUserRouter = require('./src/router/user')
+const {getCookieExpires,handleUserRouter} = require('./src/router/user')
+const {get,set} = require('./src/db/redis')
 const handleBlogRouter = require('./src/router/blog')
 const querystring = require('querystring')
 
-const SESSION_DATA={}
 
 // 用于处理post data
 
@@ -60,22 +60,45 @@ const serverHandle = (req, res)=>{
     })
 
     //解析session
+    // let needSetCookie = false
+    // let userId = req.cookie.userid
+    // if(userId) {
+    //     if(!SESSION_DATA[userId]) {
+    //         SESSION_DATA[userId] = {}
+    //     }
+    // } else {
+    //     needSetCookie = true
+    //     userId = `${Date.now()}_${Math.random()}`
+    //     SESSION_DATA[userId] = {}
+    // }
+    // req.session = SESSION_DATA[userId]
+
+    //解析session 使用redis 
     let needSetCookie = false
     let userId = req.cookie.userid
-    if(userId) {
-        if(!SESSION_DATA[userId]) {
-            SESSION_DATA[userId] = {}
-        }
-    } else {
+    if(!userId){
         needSetCookie = true
-        userId = `${Date.now()}_${Math.random()}`
-        SESSION_DATA[userId] = {}
+        userId=`${Date.now()}_${Math.random()}`
+        set(userId,{})
     }
-    req.session = SESSION_DATA[userId]
-    
+    //获取session
+    req.sessionId = userId
+    get(req.sessionId).then(sessionData=>{
+        if(sessionData===null){
+            //初始化redis中session值
+            set(req.sessionId,{})
+            //设置session
+            req.session = {}
+        } else {
+            //设置session
+            req.session = sessionData
+        }
+        console.log('req.session is ',req.session)
 
-    //处理post data
-    getPostData(req).then(postData => {
+        //处理 post data
+        return getPostData(req)
+    })
+    .then(postData => {
         req.body = postData
         // 处理blog路由
         // const blogData = handleBlogRouter(req,res)
@@ -88,6 +111,10 @@ const serverHandle = (req, res)=>{
         const blogResult = handleBlogRouter(req,res)
         if(blogResult){
             blogResult.then(blogData=>{
+                if(needSetCookie){
+                    res.setHeader('Set-cookie',`userid=${userId};path=/;HttpOnly; expires=${getCookieExpires()}`)
+                }
+
                 res.end(JSON.stringify(blogData))
             })
             return 
@@ -103,6 +130,10 @@ const serverHandle = (req, res)=>{
         const userResult= handleUserRouter(req,res)
         if (userResult) {
             userResult.then(userData=>{
+                if(needSetCookie){
+                    res.setHeader('Set-cookie',`userid=${userId};path=/;HttpOnly;expires=${getCookieExpires()}`)
+                }
+
                 res.end(JSON.stringify(userData))
             })
             return

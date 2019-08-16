@@ -5,6 +5,16 @@ const { getList,
         delBlog } = require('../controller/blog')
 // eslint-disable-next-line no-unused-vars
 const { SuccessModel,ErrorModel } = require('../model/resModel')
+
+// 统一的登陆验证函数
+const loginCheck = (req)=>{
+    if(!req.session.username){
+        return Promise.resolve(
+            new ErrorModel('尚未登陆')
+        )
+    } 
+}
+
 // eslint-disable-next-line no-unused-vars
 const handleBlogRouter = (req,res) => {
     const method = req.method //GET POST
@@ -39,7 +49,14 @@ const handleBlogRouter = (req,res) => {
         // const data = newBlog(req.body)
         // return new SuccessModel(data)
         
-        req.body.author = 'zhangsan'// 假数据 待开发登陆时做成真数据
+        const loginCheckResult = loginCheck(req)
+
+        if(loginCheckResult){
+            // 未登陆 
+            return loginCheck
+        }
+
+        req.body.author = req.session.username
         const result = newBlog(req.body)
         return result.then(data => {
             return new SuccessModel(data)
@@ -48,6 +65,13 @@ const handleBlogRouter = (req,res) => {
 
     //更新一篇博客
     if(method === 'POST' && req.path === '/api/blog/update') {
+        const loginCheckResult = loginCheck(req)
+
+        if(loginCheckResult){
+            // 未登陆 
+            return loginCheck
+        }
+
         const result = updateBlog(id,req.body)
         return result.then( val =>{
             return val?new SuccessModel():new ErrorModel('更新博客失败')
@@ -56,7 +80,14 @@ const handleBlogRouter = (req,res) => {
 
     //删除一篇博客
     if(method === 'POST' && req.path === '/api/blog/del') {
-        const author = 'zhangsan'// 假数据 待开发登陆时做成真数据
+        const loginCheckResult = loginCheck(req)
+
+        if(loginCheckResult){
+            // 未登陆 
+            return loginCheck
+        }
+
+        const author = req.session.username
         const result = delBlog(id,author)
         return result.then(val => {
             if(val) {
