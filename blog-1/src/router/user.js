@@ -1,12 +1,10 @@
 const { login } = require('../controller/user')
 const { SuccessModel,ErrorModel } = require('../model/resModel')
 const {set} = require('../db/redis')
-
 //获取cookie过期时间
 const getCookieExpires = () => {
     const d =new Date()
     d.setTime(d.getTime()+(24*60*60*1000))
-    console.log('d.toGMTString() is ', d.toGMTString())
     return d.toGMTString()
 }
 
@@ -17,7 +15,6 @@ const handleUserRouter = (req,res) => {
     if(method === 'POST' && req.path === '/api/user/login') {
         const {username, password } = req.body
         // const {username, password } = req.query 
-
         const result = login(username,password)
 
         return result.then(data=>{
@@ -29,7 +26,7 @@ const handleUserRouter = (req,res) => {
                 set(req.sessionId,req.session)
 
                 console.log('req.session is ', req.session)
-                return new SuccessModel()
+                return new SuccessModel(req.session.username)
             } else {
                 return new ErrorModel('登陆失败')
             }
