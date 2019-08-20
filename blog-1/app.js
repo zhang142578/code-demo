@@ -5,7 +5,6 @@ const querystring = require('querystring')
 
 
 // 用于处理post data
-
 const getPostData = (req)=>{
     // eslint-disable-next-line no-unused-vars
     const promise = new Promise((resolve, reject) => {
@@ -133,7 +132,6 @@ const serverHandle = (req, res)=>{
                 if(needSetCookie){
                     res.setHeader('Set-cookie',`userid=${userId};path=/;HttpOnly;expires=${getCookieExpires()}`)
                 }
-
                 res.end(JSON.stringify(userData))
             })
             return

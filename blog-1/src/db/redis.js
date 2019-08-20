@@ -13,6 +13,7 @@ function set(key,val){
     redisClient.set(key,val,redis.print)
 }
 
+
 function get(key){
     const promise = new Promise((resolve,reject)=>{
         redisClient.get(key,(err,val)=>{
